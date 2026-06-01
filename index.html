@@ -609,7 +609,7 @@ try {
 } catch(e) {}
 
 // ===== DATA =====
-let STOCK=[],TX=[],fDa=[],fRcv=[],fIss=[],fStk=[],fArc=[];
+let STOCK=[],TX=[],PROJECTS=[],fDa=[],fRcv=[],fIss=[],fStk=[],fArc=[];
 let pgDa=1,pgRcv=1,pgIss=1,pgStk=1,pgArc=1;
 const PS=25;
 let ch1,ch2,ch3, detItem=null;
@@ -620,12 +620,13 @@ async function loadAll(){
   if(!sb){ load(false); refresh(); renderAll(); buildDash(); return; }
   load(true);
   try{
-    const [{data:s,error:e1},{data:t,error:e2}]=await Promise.all([
+    const [{data:s,error:e1},{data:t,error:e2},{data:p,error:e3}]=await Promise.all([
       sb.from('stock').select('*').order('total',{ascending:false}),
-      sb.from('transactions').select('*').order('date',{ascending:true}).order('created_at',{ascending:true})
+      sb.from('transactions').select('*').order('date',{ascending:true}).order('created_at',{ascending:true}),
+      sb.from('projects').select('name').eq('active',true).order('name',{ascending:true})
     ]);
     if(e1)throw e1; if(e2)throw e2;
-    STOCK=s||[]; TX=t||[];
+    STOCK=s||[]; TX=t||[]; PROJECTS=(p||[]).map(x=>x.name);
     refresh(); renderAll(); buildDash();
   }catch(err){showToast('❌ '+err.message,'e');}
   finally{load(false);}
@@ -960,20 +961,21 @@ let mMode='', mId='';
 function openModal(mode,id=''){
   if(!canEdit()) return showToast('ไม่มีสิทธิ์','e');
   mMode=mode; mId=id;
-  const today=new Date().toISOString().slice(0,10);
+  const d=new Date(); const today=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
   const iOpts=STOCK.filter(s=>!s.is_archived).map(s=>`<option value="${s.item}">`).join('');
   const cOpts=[...new Set(TX.map(t=>t.company).filter(Boolean))].map(c=>`<option value="${c}">`).join('');
+  const pOpts=PROJECTS.map(p=>`<option value="${p}">${p}</option>`).join('');
 
   if(mode==='receive'){
     document.getElementById('mTitle').textContent='📦 เพิ่มรายการรับเข้า';
     document.getElementById('mFields').innerHTML=`
       <datalist id="dl-i">${iOpts}</datalist><datalist id="dl-c">${cOpts}</datalist>
-      <div class="fg"><label>วันที่<span class="req">*</span></label><input type="date" id="mf-date" value="${today}"></div>
+      <div class="fg"><label>วันที่<span class="req">*</span></label><input type="text" id="mf-date" value="${today}" placeholder="dd/mm/yyyy" maxlength="10"></div>
       <div class="fg"><label>เอกสาร<span class="req">*</span></label><input type="text" id="mf-doc" placeholder="APV-XXXX"></div>
       <div class="fg"><label>บริษัท<span class="req">*</span></label><input type="text" id="mf-company" list="dl-c"></div>
       <div class="fg"><label>อ้างอิง</label><input type="text" id="mf-ref" placeholder="เลขที่อ้างอิง..."></div>
       <div class="fg full"><label>รายละเอียดวัสดุ<span class="req">*</span></label><input type="text" id="mf-item" list="dl-i" onchange="autoP()"></div>
-      <div class="fg"><label>โครงการ</label><input type="text" id="mf-project" placeholder="โครงการ/แหล่งที่มา..."></div>
+      <div class="fg"><label>โครงการ</label><select id="mf-project"><option value="">-- เลือกโครงการ --</option>${pOpts}</select></div>
       <div class="fg"><label>ประเภทย่อย<span class="req">*</span></label>
         <select id="mf-sub"><option value="ซื้อวัสดุใหม่">ซื้อวัสดุใหม่</option><option value="จากโครงการเดิม">จากโครงการเดิม</option></select></div>
       <div class="fg"><label>จำนวน<span class="req">*</span></label><input type="text" id="mf-qty" oninput="calcT()" onblur="fmtNum(this)" placeholder="0.00"></div>
@@ -983,12 +985,12 @@ function openModal(mode,id=''){
     document.getElementById('mTitle').textContent='🔄 เพิ่มรายการเบิกออก';
     document.getElementById('mFields').innerHTML=`
       <datalist id="dl-i2">${iOpts}</datalist><datalist id="dl-c2">${cOpts}</datalist>
-      <div class="fg"><label>วันที่<span class="req">*</span></label><input type="date" id="mf-date" value="${today}"></div>
+      <div class="fg"><label>วันที่<span class="req">*</span></label><input type="text" id="mf-date" value="${today}" placeholder="dd/mm/yyyy" maxlength="10"></div>
       <div class="fg"><label>เอกสาร<span class="req">*</span></label><input type="text" id="mf-doc" placeholder="REQ-XXXX"></div>
       <div class="fg"><label>บริษัท</label><input type="text" id="mf-company" list="dl-c2"></div>
       <div class="fg"><label>อ้างอิง</label><input type="text" id="mf-ref" placeholder="เลขที่อ้างอิง..."></div>
       <div class="fg full"><label>รายละเอียดวัสดุ<span class="req">*</span></label><input type="text" id="mf-item" list="dl-i2" onchange="autoP()"></div>
-      <div class="fg"><label>โครงการ</label><input type="text" id="mf-project" placeholder="โครงการ/ปลายทาง..."></div>
+      <div class="fg"><label>โครงการ</label><select id="mf-project"><option value="">-- เลือกโครงการ --</option>${pOpts}</select></div>
       <div class="fg"><label>ประเภทย่อย<span class="req">*</span></label>
         <select id="mf-sub"><option value="ค่าวัสดุโครงการ">ค่าวัสดุโครงการ</option><option value="ต้นทุนขาย">ต้นทุนขาย</option></select></div>
       <div class="fg"><label>จำนวน<span class="req">*</span></label><input type="text" id="mf-qty" oninput="calcT()" onblur="fmtNum(this)" placeholder="0.00"></div>
@@ -1015,12 +1017,12 @@ function openModal(mode,id=''){
     document.getElementById('mTitle').textContent=`✏️ แก้ไขรายการ (${t.type})`;
     document.getElementById('mFields').innerHTML=`
       <datalist id="dl-ie">${iOpts}</datalist>
-      <div class="fg"><label>วันที่</label><input type="date" id="mf-date" value="${t.date||today}"></div>
+      <div class="fg"><label>วันที่</label><input type="text" id="mf-date" value="${fmtDate(t.date)||today}" placeholder="dd/mm/yyyy" maxlength="10"></div>
       <div class="fg"><label>เอกสาร</label><input type="text" id="mf-doc" value="${esc4(t.doc_ref||'')}"></div>
       <div class="fg"><label>บริษัท</label><input type="text" id="mf-company" value="${esc4(t.company||'')}"></div>
       <div class="fg"><label>อ้างอิง</label><input type="text" id="mf-ref" value="${esc4(t.ref||'')}"></div>
       <div class="fg full"><label>รายละเอียดวัสดุ</label><input type="text" id="mf-item" value="${esc4(t.item)}" list="dl-ie" onchange="autoP()"></div>
-      <div class="fg"><label>โครงการ</label><input type="text" id="mf-project" value="${esc4(t.project||'')}"></div>
+      <div class="fg"><label>โครงการ</label><select id="mf-project"><option value="">-- เลือกโครงการ --</option>${PROJECTS.map(p=>`<option value="${p}"${p===t.project?' selected':''}>${p}</option>`).join('')}</select></div>
       <div class="fg"><label>ประเภทย่อย</label><select id="mf-sub">
         ${isR?`<option ${t.sub_type==='ซื้อวัสดุใหม่'?'selected':''}>ซื้อวัสดุใหม่</option><option ${t.sub_type==='จากโครงการเดิม'?'selected':''}>จากโครงการเดิม</option>`
                :`<option ${t.sub_type==='ค่าวัสดุโครงการ'?'selected':''}>ค่าวัสดุโครงการ</option><option ${t.sub_type==='ต้นทุนขาย'?'selected':''}>ต้นทุนขาย</option>`}
@@ -1040,7 +1042,7 @@ function closeModal(){document.getElementById('editModal').classList.remove('sho
 async function saveModal(){
   const gv=id=>document.getElementById(id)?.value?.trim()||'';
   const gn=id=>parseFloat((document.getElementById(id)?.value||'').replace(/,/g,''))||0;
-  const item=gv('mf-item'),qty=gn('mf-qty'),price=gn('mf-price'),date=gv('mf-date'),doc=gv('mf-doc'),total=qty*price;
+  const item=gv('mf-item'),qty=gn('mf-qty'),price=gn('mf-price'),date=dmyToYmd(gv('mf-date'))||gv('mf-date'),doc=gv('mf-doc'),total=qty*price;
   const company=gv('mf-company'),sub=gv('mf-sub'),ref=gv('mf-ref'),project=gv('mf-project');
   load(true,'กำลังบันทึก...');
   try{
