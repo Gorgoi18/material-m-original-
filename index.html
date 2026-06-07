@@ -1066,7 +1066,29 @@ async function saveModal(){
       const {error}=await sb.from('transactions').update(updateData).eq('id',mId);
       if(error) throw error; showToast('✅ แก้ไขรายการแล้ว','s');
     }
-    closeModal(); await loadAll();
+    closeModal();
+    const _daQ=document.getElementById('da-q')?.value||'';
+    const _daF=document.getElementById('da-df')?.value||'';
+    const _daT=document.getElementById('da-dt')?.value||'';
+    const _daType=document.getElementById('da-type')?.value||'';
+    const _daSub=document.getElementById('da-sub')?.value||'';
+    const _rcQ=document.getElementById('rc-q')?.value||'';
+    const _rcSub=document.getElementById('rc-sub')?.value||'';
+    const _isQ=document.getElementById('is-q')?.value||'';
+    const _isSub=document.getElementById('is-sub')?.value||'';
+    const _skQ=document.getElementById('sk-q')?.value||'';
+    await loadAll();
+    if(_daQ) document.getElementById('da-q').value=_daQ;
+    if(_daF) document.getElementById('da-df').value=_daF;
+    if(_daT) document.getElementById('da-dt').value=_daT;
+    if(_daType) document.getElementById('da-type').value=_daType;
+    if(_daSub) document.getElementById('da-sub').value=_daSub;
+    if(_rcQ) document.getElementById('rc-q').value=_rcQ;
+    if(_rcSub) document.getElementById('rc-sub').value=_rcSub;
+    if(_isQ) document.getElementById('is-q').value=_isQ;
+    if(_isSub) document.getElementById('is-sub').value=_isSub;
+    if(_skQ) document.getElementById('sk-q').value=_skQ;
+    filterData(); filterRcv(); filterIss();
   }catch(err){showToast('❌ '+err.message,'e');} finally{load(false);}
 }
 
