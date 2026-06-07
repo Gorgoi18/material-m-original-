@@ -964,7 +964,7 @@ function openModal(mode,id=''){
   const d=new Date(); const today=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
   const iOpts=STOCK.filter(s=>!s.is_archived).map(s=>`<option value="${s.item}">`).join('');
   const cOpts=[...new Set(TX.map(t=>t.company).filter(Boolean))].map(c=>`<option value="${c}">`).join('');
-  const pOpts=PROJECTS.map(p=>`<option value="${p}">${p}</option>`).join('');
+  const pOpts=PROJECTS.map(p=>`<option value="${p}">`).join('');
 
   if(mode==='receive'){
     document.getElementById('mTitle').textContent='📦 เพิ่มรายการรับเข้า';
@@ -975,7 +975,7 @@ function openModal(mode,id=''){
       <div class="fg"><label>บริษัท<span class="req">*</span></label><input type="text" id="mf-company" list="dl-c"></div>
       <div class="fg"><label>อ้างอิง</label><input type="text" id="mf-ref" placeholder="เลขที่อ้างอิง..."></div>
       <div class="fg full"><label>รายละเอียดวัสดุ<span class="req">*</span></label><input type="text" id="mf-item" list="dl-i" onchange="autoP()"></div>
-      <div class="fg"><label>โครงการ</label><select id="mf-project"><option value="">-- เลือกโครงการ --</option>${pOpts}</select></div>
+      <div class="fg"><label>โครงการ</label><input type="text" id="mf-project" placeholder="โครงการ/แหล่งที่มา..."></div>
       <div class="fg"><label>ประเภทย่อย<span class="req">*</span></label>
         <select id="mf-sub"><option value="ซื้อวัสดุใหม่">ซื้อวัสดุใหม่</option><option value="จากโครงการเดิม">จากโครงการเดิม</option></select></div>
       <div class="fg"><label>จำนวน<span class="req">*</span></label><input type="text" id="mf-qty" oninput="calcT()" onblur="fmtNum(this)" placeholder="0.00"></div>
@@ -990,7 +990,7 @@ function openModal(mode,id=''){
       <div class="fg"><label>บริษัท</label><input type="text" id="mf-company" list="dl-c2"></div>
       <div class="fg"><label>อ้างอิง</label><input type="text" id="mf-ref" placeholder="เลขที่อ้างอิง..."></div>
       <div class="fg full"><label>รายละเอียดวัสดุ<span class="req">*</span></label><input type="text" id="mf-item" list="dl-i2" onchange="autoP()"></div>
-      <div class="fg"><label>โครงการ</label><select id="mf-project"><option value="">-- เลือกโครงการ --</option>${pOpts}</select></div>
+      <div class="fg"><label>โครงการ</label><input type="text" id="mf-project" placeholder="โครงการ/ปลายทาง..."></div>
       <div class="fg"><label>ประเภทย่อย<span class="req">*</span></label>
         <select id="mf-sub"><option value="ค่าวัสดุโครงการ">ค่าวัสดุโครงการ</option><option value="ต้นทุนขาย">ต้นทุนขาย</option></select></div>
       <div class="fg"><label>จำนวน<span class="req">*</span></label><input type="text" id="mf-qty" oninput="calcT()" onblur="fmtNum(this)" placeholder="0.00"></div>
@@ -1022,13 +1022,13 @@ function openModal(mode,id=''){
       <div class="fg"><label>บริษัท</label><input type="text" id="mf-company" value="${esc4(t.company||'')}"></div>
       <div class="fg"><label>อ้างอิง</label><input type="text" id="mf-ref" value="${esc4(t.ref||'')}"></div>
       <div class="fg full"><label>รายละเอียดวัสดุ</label><input type="text" id="mf-item" value="${esc4(t.item)}" list="dl-ie" onchange="autoP()"></div>
-      <div class="fg"><label>โครงการ</label><select id="mf-project"><option value="">-- เลือกโครงการ --</option>${PROJECTS.map(p=>`<option value="${p}"${p===t.project?' selected':''}>${p}</option>`).join('')}</select></div>
+      <div class="fg"><label>โครงการ</label><input type="text" id="mf-project" value="${esc4(t.project||'')}" placeholder="โครงการ..."></div>
       <div class="fg"><label>ประเภทย่อย</label><select id="mf-sub">
         ${isR?`<option ${t.sub_type==='ซื้อวัสดุใหม่'?'selected':''}>ซื้อวัสดุใหม่</option><option ${t.sub_type==='จากโครงการเดิม'?'selected':''}>จากโครงการเดิม</option>`
                :`<option ${t.sub_type==='ค่าวัสดุโครงการ'?'selected':''}>ค่าวัสดุโครงการ</option><option ${t.sub_type==='ต้นทุนขาย'?'selected':''}>ต้นทุนขาย</option>`}
       </select></div>
-      <div class="fg"><label>จำนวน</label><input type="text" id="mf-qty" value="${N(t.qty)}" oninput="calcT()" onblur="fmtNum(this)"></div>
-      <div class="fg"><label>ราคา/หน่วย</label><input type="text" id="mf-price" value="${N(t.price)}" oninput="calcT()" onblur="fmtNum(this)"></div>
+      <div class="fg"><label>จำนวน</label><input type="text" id="mf-qty" value="${+t.qty||0}" oninput="calcT()" onblur="fmtNum(this)"></div>
+      <div class="fg"><label>ราคา/หน่วย</label><input type="text" id="mf-price" value="${+t.price||0}" oninput="calcT()" onblur="fmtNum(this)"></div>
       <div class="fg"><label>มูลค่ารวม</label><input type="text" id="mf-total" value="${N(t.total)}" readonly></div>`;
   }
   document.getElementById('editModal').classList.add('show');
