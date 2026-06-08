@@ -742,7 +742,8 @@ function renderData(){
   const totQ=fDa.reduce((s,t)=>s+(+t.qty||0),0);
   const totRcv=fDa.filter(t=>t.type==='รับเข้า').reduce((s,t)=>s+Math.abs(+t.total||0),0);
   const totIss=fDa.filter(t=>t.type!=='รับเข้า').reduce((s,t)=>s+Math.abs(+t.total||0),0);
-  document.getElementById('daTotal').innerHTML=`<td colspan="6" style="text-align:right;padding:8px">รวม ${fDa.length} รายการ</td><td class="text-right" style="padding:8px">${N2(totQ)}</td><td class="text-right" style="padding:8px"></td><td class="text-right" style="padding:8px"><div style="color:var(--gdk);font-weight:700;font-size:12px">รับเข้า ${N(totRcv)}</div><div style="color:var(--rdk);font-weight:700;font-size:12px">เบิกออก ${N(totIss)}</div></td><td colspan="2"></td>`;
+  const totNet=totRcv-totIss;
+  document.getElementById('daTotal').innerHTML=`<td colspan="6" style="text-align:right;padding:8px">รวม ${fDa.length} รายการ</td><td class="text-right" style="padding:8px">${N2(totQ)}</td><td class="text-right" style="padding:8px"></td><td class="text-right" style="padding:8px"><div style="color:var(--gdk);font-weight:700;font-size:12px">รับเข้า ${N(totRcv)}</div><div style="color:var(--rdk);font-weight:700;font-size:12px">เบิกออก ${N(totIss)}</div><div style="color:var(--primary);font-weight:700;font-size:12px;border-top:1px solid var(--border);margin-top:3px;padding-top:3px">คงเหลือ ${N(totNet)}</div></td><td colspan="2"></td>`;
   renderPag('da',fDa.length,pgDa,p=>{pgDa=p;renderData();});
 }
 
