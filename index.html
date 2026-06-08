@@ -828,7 +828,7 @@ async function shareToLine(){
   const d=latest?new Date(latest.date):new Date();
   const monthStr=`${thMonths[d.getMonth()]} ${d.getFullYear()+543}`;
   const totV=STOCK.filter(s=>(+s.qty||0)>0).reduce((s,i)=>s+(+i.total||0),0);
-  const msg=`สรุปยอดคงเหลือ\nประจำเดือน ${monthStr}\nยอดคงเหลือ  ${N(totV)} บาท\n........................................................\nลิ้งค์แนบ\nhttps://gorgoi18.github.io/material-m-original-/`;
+  const msg=`สรุป วัสดุคงเหลือ\nประจำเดือน ${monthStr}\nยอดคงเหลือ  ${N(totV)} บาท\n........................................................\nลิ้งค์แนบ\nhttps://gorgoi18.github.io/material-m-original-/`;
   load(true,'กำลังส่ง LINE...');
   try{
     const res=await fetch('https://jolly-violet-aaa6.patcharee.workers.dev/',{
