@@ -113,6 +113,7 @@ body{font-family:'Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--
 .btn-purple{background:linear-gradient(135deg,#7C3AED,#6D28D9);color:white;box-shadow:0 2px 8px rgba(124,58,237,.25)}
 .btn-edit{background:linear-gradient(135deg,#C4B5FD,#A78BFA);color:#4C1D95;box-shadow:0 2px 6px rgba(167,139,250,.35)}
 .btn-dl{background:linear-gradient(135deg,#1C2340,#2D3A5E);color:white;box-shadow:0 2px 8px rgba(28,35,64,.25)}
+.btn-line{background:linear-gradient(135deg,#06C755,#04A844);color:white;box-shadow:0 2px 8px rgba(6,199,85,.3)}
 .btn-sm{padding:4px 9px;font-size:11px;border-radius:6px}
 .btn-off{opacity:.35;cursor:not-allowed!important;pointer-events:none;transform:none!important;box-shadow:none!important}
 
@@ -402,6 +403,7 @@ tr:hover td{background:#F7F9FF}
       <option value="ok">จำนวนปกติ (≥100)</option>
     </select>
     <div class="spacer"></div>
+    <button class="btn btn-line" onclick="shareToLine()">📤 ส่ง Line</button>
     <button class="btn btn-dl" onclick="dlCSV('stock')">⬇️ ดาวน์โหลด</button>
     <button class="btn btn-secondary" onclick="window.print()">🖨️ พิมพ์</button>
     <button id="btn-add-stk" class="btn btn-primary" onclick="openModal('stock')">➕ เพิ่มวัสดุ</button>
@@ -737,8 +739,10 @@ function renderData(){
   <td><span class="badge ${t.type==='รับเข้า'?'b-in':'b-out'}">${t.type||'—'}</span></td>
   <td><span class="badge ${t.sub_type==='ซื้อวัสดุใหม่'?'b-in':t.sub_type==='จากโครงการเดิม'?'b-in2':t.sub_type==='ค่าวัสดุโครงการ'?'b-out':'b-out2'}">${t.sub_type||'—'}</span></td>
   </tr>`).join('');
-  const totQ=fDa.reduce((s,t)=>s+(+t.qty||0),0), totV=fDa.reduce((s,t)=>s+(+t.total||0),0);
-  document.getElementById('daTotal').innerHTML=`<td colspan="6" style="text-align:right;padding:8px">รวม ${fDa.length} รายการ</td><td class="text-right" style="padding:8px">${N2(totQ)}</td><td class="text-right" style="padding:8px"></td><td class="text-right" style="padding:8px;font-weight:700">${N(totV)}</td><td colspan="2"></td>`;
+  const totQ=fDa.reduce((s,t)=>s+(+t.qty||0),0);
+  const totRcv=fDa.filter(t=>t.type==='รับเข้า').reduce((s,t)=>s+Math.abs(+t.total||0),0);
+  const totIss=fDa.filter(t=>t.type!=='รับเข้า').reduce((s,t)=>s+Math.abs(+t.total||0),0);
+  document.getElementById('daTotal').innerHTML=`<td colspan="6" style="text-align:right;padding:8px">รวม ${fDa.length} รายการ</td><td class="text-right" style="padding:8px">${N2(totQ)}</td><td class="text-right" style="padding:8px"></td><td class="text-right" style="padding:8px"><div style="color:var(--gdk);font-weight:700;font-size:12px">รับเข้า ${N(totRcv)}</div><div style="color:var(--rdk);font-weight:700;font-size:12px">เบิกออก ${N(totIss)}</div></td><td colspan="2"></td>`;
   renderPag('da',fDa.length,pgDa,p=>{pgDa=p;renderData();});
 }
 
@@ -814,6 +818,15 @@ function filterStk(){
   const f=document.getElementById('sk-f').value;
   fStk=STOCK.filter(s=>!s.is_archived&&(+s.qty||0)>0&&(!q||s.item.toLowerCase().includes(q))&&(!f||(f==='low'?(+s.qty||0)<100:(+s.qty||0)>=100))).sort(stkSort);
   pgStk=1; renderStk();
+}
+function shareToLine(){
+  const thMonths=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const latest=[...TX].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+  const d=latest?new Date(latest.date):new Date();
+  const monthStr=`${thMonths[d.getMonth()]} ${d.getFullYear()+543}`;
+  const totV=STOCK.filter(s=>(+s.qty||0)>0).reduce((s,i)=>s+(+i.total||0),0);
+  const msg=`สรุปยอดคงเหลือ\nประจำเดือน ${monthStr}\nยอดคงเหลือ  ${N(totV)} บาท\n........................................................\nลิ้งค์แนบ\nhttps://gorgoi18.github.io/material-m-original-/`;
+  window.open(`https://line.me/R/share?text=${encodeURIComponent(msg)}`,'_blank');
 }
 function renderStk(){
   const st=(pgStk-1)*PS, pg=fStk.slice(st,st+PS);
