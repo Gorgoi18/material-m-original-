@@ -828,13 +828,37 @@ async function shareToLine(){
   const d=latest?new Date(latest.date):new Date();
   const monthStr=`${thMonths[d.getMonth()]} ${d.getFullYear()+543}`;
   const totV=STOCK.filter(s=>(+s.qty||0)>0).reduce((s,i)=>s+(+i.total||0),0);
-  const msg=`สรุป วัสดุคงเหลือ\nประจำเดือน ${monthStr}\nยอดคงเหลือ  ${N(totV)} บาท\n........................................................\nลิ้งค์แนบ\nhttps://gorgoi18.github.io/material-m-original-/`;
+  const flexMsg={type:'flex',altText:`สรุป วัสดุคงเหลือ ประจำเดือน ${monthStr}`,contents:{type:'bubble',size:'mega',
+    styles:{body:{backgroundColor:'#FFFFFF'},footer:{backgroundColor:'#F4F6FB'}},
+    header:{type:'box',layout:'vertical',backgroundColor:'#EBF0FF',paddingAll:'20px',contents:[
+      {type:'box',layout:'horizontal',contents:[
+        {type:'text',text:'📦',size:'xxl',flex:0},
+        {type:'box',layout:'vertical',margin:'md',contents:[
+          {type:'text',text:'สรุป วัสดุคงเหลือ',color:'#2D4AC9',size:'lg',weight:'bold'},
+          {type:'text',text:'Srichonlathorn Co., Ltd.',color:'#6B85F3',size:'xs',margin:'sm'}
+        ]}
+      ]}
+    ]},
+    body:{type:'box',layout:'vertical',paddingAll:'20px',contents:[
+      {type:'box',layout:'horizontal',contents:[
+        {type:'text',text:'📅',size:'sm',flex:0},
+        {type:'text',text:`ประจำเดือน  ${monthStr}`,color:'#555555',size:'sm',margin:'sm'}
+      ]},
+      {type:'separator',margin:'lg',color:'#DCE1F0'},
+      {type:'text',text:'💰  ยอดคงเหลือ',color:'#888888',size:'sm',margin:'lg'},
+      {type:'text',text:`${N(totV)} บาท`,color:'#2D4AC9',size:'xxl',weight:'bold',margin:'sm'},
+      {type:'text',text:`🕐 ${new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'numeric'})}`,color:'#aaaaaa',size:'xs',margin:'md'}
+    ]},
+    footer:{type:'box',layout:'vertical',paddingAll:'15px',contents:[
+      {type:'button',style:'primary',color:'#4361EE',height:'sm',action:{type:'uri',label:'🔗 เปิดระบบคลังวัสดุ',uri:'https://gorgoi18.github.io/material-m-original-/'}}
+    ]}
+  }};
   load(true,'กำลังส่ง LINE...');
   try{
     const res=await fetch('https://jolly-violet-aaa6.patcharee.workers.dev/',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${LINE_ACCESS_TOKEN}`},
-      body:JSON.stringify({to:GROUP_ID,messages:[{type:'text',text:msg}]})
+      body:JSON.stringify({to:GROUP_ID,messages:[flexMsg]})
     });
     if(res.ok){showToast('✅ ส่ง LINE กลุ่มสำเร็จ','s');}
     else{const e=await res.json();throw new Error(e.message||'Error '+res.status);}
