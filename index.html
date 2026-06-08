@@ -820,14 +820,26 @@ function filterStk(){
   fStk=STOCK.filter(s=>!s.is_archived&&(+s.qty||0)>0&&(!q||s.item.toLowerCase().includes(q))&&(!f||(f==='low'?(+s.qty||0)<100:(+s.qty||0)>=100))).sort(stkSort);
   pgStk=1; renderStk();
 }
-function shareToLine(){
+async function shareToLine(){
+  const LINE_ACCESS_TOKEN="l9j62il/hSz98E7xU9vQEyyVyIsBHRbgCkNqHeYEO2tTbcsVVbzRaYBsujJELX33WLzwVCUYhj10qIMiyc+bcLUEQ27KgyQonlMN0aJh9E3K1MCMHCPjYd7G+8MODbnX2P5y9DvcLCaF6tvHSGG9XgdB04t89/1O/w1cDnyilFU=";
+  const GROUP_ID="Cab26e3f47d78cc52828244749e070f7e";
   const thMonths=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const latest=[...TX].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
   const d=latest?new Date(latest.date):new Date();
   const monthStr=`${thMonths[d.getMonth()]} ${d.getFullYear()+543}`;
   const totV=STOCK.filter(s=>(+s.qty||0)>0).reduce((s,i)=>s+(+i.total||0),0);
   const msg=`สรุปยอดคงเหลือ\nประจำเดือน ${monthStr}\nยอดคงเหลือ  ${N(totV)} บาท\n........................................................\nลิ้งค์แนบ\nhttps://gorgoi18.github.io/material-m-original-/`;
-  window.open(`https://line.me/R/share?text=${encodeURIComponent(msg)}`,'_blank');
+  load(true,'กำลังส่ง LINE...');
+  try{
+    const res=await fetch('https://corsproxy.io/?https://api.line.me/v2/bot/message/push',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${LINE_ACCESS_TOKEN}`},
+      body:JSON.stringify({to:GROUP_ID,messages:[{type:'text',text:msg}]})
+    });
+    if(res.ok){showToast('✅ ส่ง LINE กลุ่มสำเร็จ','s');}
+    else{const e=await res.json();throw new Error(e.message||'Error '+res.status);}
+  }catch(err){showToast('❌ '+err.message,'e');}
+  finally{load(false);}
 }
 function renderStk(){
   const st=(pgStk-1)*PS, pg=fStk.slice(st,st+PS);
